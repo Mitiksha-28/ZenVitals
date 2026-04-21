@@ -1,288 +1,163 @@
-/**
- * ================================================
- * ZenVitals – Mood Module
- * ================================================
- * 
- * Purpose:
- * Handles mood tracking, user input,
- * and mood-related data processing.
- * 
- * @package ZenVitals
- */
+// mood.js — ZenVitals check-in & form logic
 
-(function() {
-  'use strict';
+const Mood = {
+  selectedMood: null,
+  currentValues: {
+    energy: 5,
+    stress: 5,
+    sleepHours: 7,
+    activity: 5,
+    mood: null,
+    reflection: '',
+  },
 
-  /**
-   * Mood options configuration
-   */
-  const MOOD_OPTIONS = [
-    {
-      id: 'happy',
-      label: 'Happy',
-      icon: '😊',
-      color: '#4CAF50',
-      description: 'Feeling joyful and content'
-    },
-    {
-      id: 'good',
-      label: 'Good',
-      icon: '🙂',
-      color: '#8BC34A',
-      description: 'Doing well, feeling positive'
-    },
-    {
-      id: 'neutral',
-      label: 'Neutral',
-      icon: '😐',
-      color: '#FFC107',
-      description: 'Neither good nor bad'
-    },
-    {
-      id: 'bad',
-      label: 'Bad',
-      icon: '😔',
-      color: '#FF9800',
-      description: 'Feeling down or uneasy'
-    },
-    {
-      id: 'terrible',
-      label: 'Terrible',
-      icon: '😢',
-      color: '#F44336',
-      description: 'Feeling very low'
-    }
-  ];
+  init() {
+    this._bindMoodCards();
+    this._bindSliders();
+    this._bindSleepInput();
+    this._bindReflection();
+    this._bindSubmit();
+    this._updateLiveScore();
+  },
 
-  /**
-   * Current mood selection
-   */
-  let currentMood = null;
-
-  /**
-   * Additional factors
-   */
-  let factors = {
-    sleep: null,
-    exercise: null,
-    social: null,
-    notes: ''
-  };
-
-  /**
-   * Initialize mood tracker
-   * @public
-   */
-  function init() {
-    console.log('Initializing Mood Tracker...');
-    setupMoodSelector();
-    loadTodayEntry();
-  }
-
-  /**
-   * Setup mood selection UI
-   * @private
-   */
-  function setupMoodSelector() {
-    const moodOptions = document.querySelectorAll('.mood-option');
-    
-    moodOptions.forEach(option => {
-      option.addEventListener('click', function() {
-        selectMood(this.dataset.mood);
+  _bindMoodCards() {
+    document.querySelectorAll('.mood-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        this.selectedMood = card.dataset.mood;
+        this.currentValues.mood = this.selectedMood;
+        this._updateLiveScore();
       });
     });
+  },
 
-    // Setup factor inputs
-    const sleepInput = document.getElementById('sleep-hours');
-    const exerciseInput = document.getElementById('exercise-minutes');
-    const notesInput = document.getElementById('mood-notes');
+  _bindSliders() {
+    const energySlider = document.getElementById('energy-slider');
+    const stressSlider = document.getElementById('stress-slider');
+    const activitySlider = document.getElementById('activity-slider');
 
-    if (sleepInput) {
-      sleepInput.addEventListener('change', function() {
-        factors.sleep = parseFloat(this.value);
+    if (energySlider) {
+      energySlider.addEventListener('input', (e) => {
+        document.getElementById('energy-val').textContent = e.target.value;
+        this.currentValues.energy = Number(e.target.value);
+        this._updateSliderFill(e.target);
+        this._updateLiveScore();
       });
+      this._updateSliderFill(energySlider);
     }
 
-    if (exerciseInput) {
-      exerciseInput.addEventListener('change', function() {
-        factors.exercise = parseInt(this.value);
+    if (stressSlider) {
+      stressSlider.addEventListener('input', (e) => {
+        document.getElementById('stress-val').textContent = e.target.value;
+        this.currentValues.stress = Number(e.target.value);
+        this._updateSliderFill(e.target);
+        this._updateLiveScore();
       });
+      this._updateSliderFill(stressSlider);
     }
 
-    if (notesInput) {
-      notesInput.addEventListener('input', function() {
-        factors.notes = this.value;
+    if (activitySlider) {
+      activitySlider.addEventListener('input', (e) => {
+        document.getElementById('activity-val').textContent = e.target.value;
+        this.currentValues.activity = Number(e.target.value);
+        this._updateSliderFill(e.target);
+        this._updateLiveScore();
       });
+      this._updateSliderFill(activitySlider);
     }
+  },
 
-    // Setup submit button
-    const submitBtn = document.getElementById('submit-mood');
-    if (submitBtn) {
-      submitBtn.addEventListener('click', saveMoodEntry);
-    }
-  }
+  _updateSliderFill(slider) {
+    const min = slider.min || 0;
+    const max = slider.max || 10;
+    const val = slider.value;
+    const pct = ((val - min) / (max - min)) * 100;
+    slider.style.setProperty('--fill', `${pct}%`);
+  },
 
-  /**
-   * Handle mood selection
-   * @public
-   * @param {string} moodId - Selected mood ID
-   */
-  function selectMood(moodId) {
-    // Update UI
-    const moodOptions = document.querySelectorAll('.mood-option');
-    moodOptions.forEach(option => {
-      if (option.dataset.mood === moodId) {
-        option.classList.add('selected');
-      } else {
-        option.classList.remove('selected');
-      }
+  _bindSleepInput() {
+    const sleepInput = document.getElementById('sleep-input');
+    if (!sleepInput) return;
+    sleepInput.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value) || 0;
+      this.currentValues.sleepHours = val;
+      this._updateLiveScore();
     });
+  },
 
-    // Store selection
-    currentMood = moodId;
-  }
+  _bindReflection() {
+    const ref = document.getElementById('reflection-input');
+    if (!ref) return;
+    ref.addEventListener('input', (e) => {
+      this.currentValues.reflection = e.target.value;
+      const count = document.getElementById('char-count');
+      if (count) count.textContent = e.target.value.length;
+    });
+  },
 
-  /**
-   * Save mood entry
-   * @private
-   */
-  function saveMoodEntry() {
-    if (!currentMood) {
-      showMessage('Please select a mood', 'error');
+  _updateLiveScore() {
+    const preview = document.getElementById('score-preview');
+    if (!preview) return;
+    if (!this.currentValues.mood) {
+      preview.textContent = '--';
+      return;
+    }
+    const score = Logic.calculateScore(this.currentValues);
+    preview.textContent = score;
+    const label = Logic.getScoreLabel(score);
+    document.getElementById('score-preview-label').textContent = label.label;
+    preview.style.color = label.color;
+  },
+
+  _bindSubmit() {
+    const btn = document.getElementById('submit-checkin');
+    if (!btn) return;
+    btn.addEventListener('click', () => this.submit());
+  },
+
+  submit() {
+    if (!this.currentValues.mood) {
+      this._showError('Please select your mood to continue.');
+      return;
+    }
+    if (!this.currentValues.sleepHours || this.currentValues.sleepHours < 0) {
+      this._showError('Please enter your sleep hours.');
       return;
     }
 
+    const score = Logic.calculateScore(this.currentValues);
+    const categories = Logic.getCategoryScores(this.currentValues);
     const entry = {
-      id: generateId(),
-      mood: currentMood,
-      date: new Date().toISOString(),
-      factors: { ...factors }
+      ...this.currentValues,
+      score,
+      categories,
+      date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
     };
 
-    // Get existing entries
-    const entries = Storage.get('mood_entries') || [];
-    entries.push(entry);
-    
-    // Save to storage
-    Storage.set('mood_entries', entries);
+    Storage.saveCheckIn(entry);
+    this._showSuccess(score);
+    Dashboard.refresh();
+  },
 
-    // Show success message
-    showMessage('Mood entry saved!', 'success');
+  _showError(msg) {
+    const el = document.getElementById('checkin-error');
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = 'block';
+    setTimeout(() => (el.style.display = 'none'), 3000);
+  },
 
+  _showSuccess(score) {
+    const modal = document.getElementById('success-modal');
+    const scoreEl = document.getElementById('modal-score');
+    if (!modal) return;
+    if (scoreEl) scoreEl.textContent = score;
+    modal.classList.add('visible');
     // Reset form
-    reset();
-
-    // Trigger dashboard refresh if on that page
-    if (window.Dashboard && Dashboard.refresh) {
-      Dashboard.refresh();
-    }
-  }
-
-  /**
-   * Load today's entry if exists
-   * @private
-   */
-  function loadTodayEntry() {
-    const entries = Storage.get('mood_entries') || [];
-    const today = new Date().toDateString();
-    
-    const todayEntry = entries.find(entry => {
-      return new Date(entry.date).toDateString() === today;
-    });
-
-    if (todayEntry) {
-      selectMood(todayEntry.mood);
-      currentMood = todayEntry.mood;
-
-      // Load factors if available
-      if (todayEntry.factors) {
-        if (todayEntry.factors.sleep) {
-          const sleepInput = document.getElementById('sleep-hours');
-          if (sleepInput) sleepInput.value = todayEntry.factors.sleep;
-        }
-        if (todayEntry.factors.exercise) {
-          const exerciseInput = document.getElementById('exercise-minutes');
-          if (exerciseInput) exerciseInput.value = todayEntry.factors.exercise;
-        }
-        if (todayEntry.factors.notes) {
-          const notesInput = document.getElementById('mood-notes');
-          if (notesInput) notesInput.value = todayEntry.factors.notes;
-        }
-      }
-
-      showMessage('You\'ve already logged your mood today', 'info');
-    }
-  }
-
-  /**
-   * Reset mood form
-   * @public
-   */
-  function reset() {
-    currentMood = null;
-    factors = {
-      sleep: null,
-      exercise: null,
-      social: null,
-      notes: ''
-    };
-
-    // Reset UI
-    const moodOptions = document.querySelectorAll('.mood-option');
-    moodOptions.forEach(option => {
-      option.classList.remove('selected');
-    });
-
-    const inputs = ['sleep-hours', 'exercise-minutes', 'mood-notes'];
-    inputs.forEach(id => {
-      const input = document.getElementById(id);
-      if (input) input.value = '';
-    });
-  }
-
-  /**
-   * Get mood options
-   * @public
-   * @returns {Array} Mood options
-   */
-  function getMoodOptions() {
-    return [...MOOD_OPTIONS];
-  }
-
-  /**
-   * Get entries for date range
-   * @public
-   * @param {number} days - Number of days
-   * @returns {Array} Mood entries
-   */
-  function getEntriesForDays(days) {
-    const entries = Storage.get('mood_entries') || [];
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - days);
-
-    return entries.filter(entry => {
-      return new Date(entry.date) >= cutoff;
-    });
-  }
-
-  // Utility functions
-  function generateId() {
-    return 'mood_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-  }
-
-  function showMessage(message, type) {
-    // Simple message display - can be enhanced
-    console.log(`[${type}] ${message}`);
-    alert(message);
-  }
-
-  // Expose public API
-  window.MoodTracker = {
-    init: init,
-    selectMood: selectMood,
-    reset: reset,
-    getMoodOptions: getMoodOptions,
-    getEntriesForDays: getEntriesForDays
-  };
-
-})();
+    setTimeout(() => {
+      modal.classList.remove('visible');
+      Navigation.switchTo('dashboard');
+    }, 2500);
+  },
+};

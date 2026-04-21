@@ -1,421 +1,251 @@
-/**
- * ================================================
- * ZenVitals – AI Insights Module
- * ================================================
- * 
- * Purpose:
- * Generates AI-powered wellness insights
- * and personalized recommendations.
- * 
- * @package ZenVitals
- */
+// dashboard.js — ZenVitals dashboard renderer
 
-(function() {
-  'use strict';
+const Dashboard = {
+  charts: {},
 
-  /**
-   * AI Configuration
-   */
-  const AI_CONFIG = {
-    model: 'zenvitals-v1',
-    minEntriesRequired: 3,
-    insightsUpdateInterval: 24 * 60 * 60 * 1000 // 24 hours
-  };
+  init() {
+    this.refresh();
+  },
 
-  /**
-   * Insight categories
-   */
-  const CATEGORIES = {
-    mood: 'Mood Analysis',
-    sleep: 'Sleep Quality',
-    activity: 'Activity Level',
-    social: 'Social Connection',
-    overall: 'Overall Wellness'
-  };
+  refresh() {
+    const latest = Storage.getLatestCheckIn();
+    const recent = Storage.getRecentCheckIns(7);
 
-  /**
-   * AI insights state
-   */
-  let insightsState = {
-    lastGenerated: null,
-    currentInsights: []
-  };
-
-  /**
-   * Initialize AI insights
-   * @public
-   */
-  function init() {
-    console.log('Initializing AI Insights...');
-    loadCachedInsights();
-    generate();
-  }
-
-  /**
-   * Generate new insights
-   * @public
-   */
-  function generate() {
-    const entries = Storage.get('mood_entries') || [];
-    
-    // Check minimum entries
-    if (entries.length < AI_CONFIG.minEntriesRequired) {
-      showNeedMoreData();
+    if (!latest) {
+      this._showEmptyState();
       return;
     }
 
-    // Check if we need to regenerate
-    if (shouldSkipRegeneration()) {
-      displayCurrentInsights();
-      return;
+    this._hideEmptyState();
+    this._renderScore(latest);
+    this._renderCategories(latest.categories);
+    this._renderInsights(latest);
+    this._renderTrendChart(recent);
+    this._renderMoodHeatmap(recent);
+    this._renderStats(recent);
+  },
+
+  _renderScore(entry) {
+    const scoreEl = document.getElementById('main-score');
+    const labelEl = document.getElementById('score-label');
+    const circleEl = document.getElementById('score-circle-fill');
+    if (!scoreEl) return;
+
+    const label = Logic.getScoreLabel(entry.score);
+    scoreEl.textContent = entry.score;
+    if (labelEl) {
+      labelEl.textContent = `${label.emoji} ${label.label}`;
+      labelEl.style.color = label.color;
     }
 
-    // Generate new insights
-    const insights = analyzeData(entries);
-    
-    // Cache insights
-    cacheInsights(insights);
-    
-    // Display insights
-    displayInsights(insights);
-  }
-
-  /**
-   * Analyze user data and generate insights
-   * @private
-   * @param {Array} entries - Mood entries
-   * @returns {Array} Generated insights
-   */
-  function analyzeData(entries) {
-    const insights = [];
-    const recent = getRecentEntries(entries, 7);
-    const older = getRecentEntries(entries, 14).filter(e => 
-      !recent.some(r => r.id === e.id)
-    );
-
-    // Analyze mood patterns
-    insights.push(analyzeMoodPattern(recent));
-
-    // Analyze trends
-    if (older.length > 0) {
-      insights.push(analyzeTrend(recent, older));
+    // Animate circular progress
+    if (circleEl) {
+      const circumference = 2 * Math.PI * 54;
+      const offset = circumference - (entry.score / 100) * circumference;
+      circleEl.style.strokeDasharray = circumference;
+      circleEl.style.strokeDashoffset = circumference;
+      circleEl.style.stroke = label.color;
+      setTimeout(() => {
+        circleEl.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1)';
+        circleEl.style.strokeDashoffset = offset;
+      }, 100);
     }
 
-    // Generate recommendations
-    insights.push(generateRecommendations(entries));
+    // Update streak/date
+    const dateEl = document.getElementById('last-checkin-date');
+    if (dateEl) dateEl.textContent = `Last check-in: ${entry.date}`;
+  },
 
-    // Analyze sleep if available
-    const sleepData = getSleepData(entries);
-    if (sleepData.length > 0) {
-      insights.push(analyzeSleep(sleepData));
-    }
-
-    // Analyze activity
-    const activityData = getActivityData(entries);
-    if (activityData.length > 0) {
-      insights.push(analyzeActivity(activityData));
-    }
-
-    return insights;
-  }
-
-  /**
-   * Analyze mood pattern
-   * @private
-   * @param {Array} entries - Recent entries
-   * @returns {Object} Insight object
-   */
-  function analyzeMoodPattern(entries) {
-    const moods = entries.map(e => e.mood);
-    const moodCounts = {};
-    
-    moods.forEach(mood => {
-      moodCounts[mood] = (moodCounts[mood] || 0) + 1;
+  _renderCategories(cats) {
+    if (!cats) return;
+    ['physical', 'mental', 'emotional'].forEach(cat => {
+      const bar = document.getElementById(`${cat}-bar`);
+      const val = document.getElementById(`${cat}-val`);
+      const score = cats[cat] || 0;
+      if (bar) {
+        bar.style.width = '0%';
+        setTimeout(() => {
+          bar.style.transition = 'width 1s cubic-bezier(0.4,0,0.2,1)';
+          bar.style.width = `${score}%`;
+          const hue = Math.round((score / 100) * 120);
+          bar.style.background = `hsl(${hue}, 70%, 55%)`;
+        }, 300);
+      }
+      if (val) val.textContent = score;
     });
+  },
 
-    const dominantMood = Object.keys(moodCounts).reduce((a, b) => 
-      moodCounts[a] > moodCounts[b] ? a : b
-    );
-
-    let insight = '';
-    let type = 'positive';
-
-    switch (dominantMood) {
-      case 'happy':
-        insight = 'You\'ve been feeling happy lately! Keep doing what makes you happy.';
-        break;
-      case 'good':
-        insight = 'You\'re in a good place emotionally. Maintain this positive momentum.';
-        break;
-      case 'neutral':
-        insight = 'Your mood has been stable. Consider trying new activities to boost your spirits.';
-        type = 'neutral';
-        break;
-      case 'bad':
-        insight = 'It seems you\'ve had some challenging days. Remember to be kind to yourself.';
-        type = 'warning';
-        break;
-      case 'terrible':
-        insight = 'I notice you\'ve been going through a difficult time. Please consider talking to someone you trust.';
-        type = 'alert';
-        break;
-    }
-
-    return {
-      category: CATEGORIES.mood,
-      title: 'Mood Patterns',
-      text: insight,
-      type: type
-    };
-  }
-
-  /**
-   * Analyze mood trend
-   * @private
-   * @param {Array} recent - Recent entries
-   * @param {Array} older - Older entries
-   * @returns {Object} Insight object
-   */
-  function analyzeTrend(recent, older) {
-    const recentAvg = getAverageMood(recent);
-    const olderAvg = getAverageMood(older);
-    
-    const diff = recentAvg - olderAvg;
-    let insight = '';
-    let type = 'positive';
-
-    if (diff > 15) {
-      insight = 'Great news! Your mood has improved significantly compared to last week. Whatever you\'re doing, keep it up!';
-    } else if (diff < -15) {
-      insight = 'Your mood seems to have dipped compared to last week. Try to identify what\'s causing stress and address it.';
-      type = 'warning';
-    } else {
-      insight = 'Your emotional state has been consistent. Stability is a good foundation for growth.';
-      type = 'neutral';
-    }
-
-    return {
-      category: CATEGORIES.overall,
-      title: 'Mood Trend',
-      text: insight,
-      type: type
-    };
-  }
-
-  /**
-   * Generate personalized recommendations
-   * @private
-   * @param {Array} entries - All entries
-   * @returns {Object} Insight object
-   */
-  function generateRecommendations(entries) {
-    const recommendations = [];
-    
-    // Check sleep patterns
-    const sleepData = getSleepData(entries);
-    if (sleepData.length > 0) {
-      const avgSleep = getAverage(sleepData, 'sleep');
-      if (avgSleep < 7) {
-        recommendations.push('Try to get at least 7-8 hours of sleep for better mood regulation.');
-      }
-    }
-
-    // Check exercise
-    const exerciseData = getActivityData(entries);
-    if (exerciseData.length > 0) {
-      const avgExercise = getAverage(exerciseData, 'exercise');
-      if (avgExercise < 30) {
-        recommendations.push('Regular physical activity can boost your mood. Try a 30-minute walk today.');
-      }
-    }
-
-    // Check notes for stress
-    const stressedEntries = entries.filter(e => 
-      e.factors && e.factors.notes && 
-      e.factors.notes.toLowerCase().includes('stress')
-    );
-    if (stressedEntries.length > 2) {
-      recommendations.push('You\'ve mentioned stress several times. Consider trying meditation or deep breathing exercises.');
-    }
-
-    const text = recommendations.length > 0 
-      ? recommendations.join(' ') 
-      : 'You\'re doing great! Keep up your healthy habits and continue tracking your wellness.';
-
-    return {
-      category: CATEGORIES.overall,
-      title: 'Recommendations',
-      text: text,
-      type: 'neutral',
-      isRecommendation: true
-    };
-  }
-
-  /**
-   * Analyze sleep data
-   * @private
-   * @param {Array} sleepData - Sleep entries
-   * @returns {Object} Insight object
-   */
-  function analyzeSleep(sleepData) {
-    const avgHours = getAverage(sleepData, 'sleep');
-    let insight = '';
-    let type = 'positive';
-
-    if (avgHours >= 7 && avgHours <= 9) {
-      insight = `You're getting great sleep! Averaging ${avgHours.toFixed(1)} hours per night is ideal for mental health.`;
-    } else if (avgHours < 7) {
-      insight = `You're averaging ${avgHours.toFixed(1)} hours of sleep. Try to get at least 7 hours for better mood and energy.`;
-      type = 'warning';
-    } else {
-      insight = `You're sleeping ${avgHours.toFixed(1)} hours on average. Make sure you're balancing rest with activity.`;
-      type = 'neutral';
-    }
-
-    return {
-      category: CATEGORIES.sleep,
-      title: 'Sleep Analysis',
-      text: insight,
-      type: type
-    };
-  }
-
-   /**
-   * Analyze activity data
-   * @private
-   * @param {Array} activityData - Activity entries
-   * @returns {Object} Insight object
-   */
-  function analyzeActivity(activityData) {
-    const avgMinutes = getAverage(activityData, 'exercise');
-    let insight = '';
-    let type = 'positive';
-
-    if (avgMinutes >= 30) {
-      insight = `Great job staying active! You're averaging ${avgMinutes.toFixed(0)} minutes of activity daily.`;
-    } else if (avgMinutes > 0) {
-      insight = `You're averaging ${avgMinutes.toFixed(0)} minutes of activity. Try to increase to 30 minutes for optimal benefits.`;
-      type = 'warning';
-    } else {
-      insight = 'No activity data recorded yet. Starting with a short walk can make a big difference in how you feel.';
-      type = 'neutral';
-    }
-
-    return {
-      category: CATEGORIES.activity,
-      title: 'Activity Check',
-      text: insight,
-      type: type
-    };
-  }
-
-  // Utility functions
-
-  function getRecentEntries(entries, days) {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - days);
-    
-    return entries.filter(entry => new Date(entry.date) >= cutoff);
-  }
-
-  function getAverageMood(entries) {
-    const weights = { happy: 100, good: 75, neutral: 50, bad: 25, terrible: 0 };
-    const total = entries.reduce((sum, e) => sum + (weights[e.mood] || 50), 0);
-    return entries.length > 0 ? total / entries.length : 50;
-  }
-
-  function getSleepData(entries) {
-    return entries.filter(e => e.factors && e.factors.sleep);
-  }
-
-  function getActivityData(entries) {
-    return entries.filter(e => e.factors && e.factors.exercise);
-  }
-
-  function getAverage(data, field) {
-    if (data.length === 0) return 0;
-    const sum = data.reduce((acc, item) => acc + (item.factors[field] || 0), 0);
-    return sum / data.length;
-  }
-
-  function shouldSkipRegeneration() {
-    if (!insightsState.lastGenerated) return false;
-    
-    const timeSinceLastGeneration = Date.now() - insightsState.lastGenerated;
-    return timeSinceLastGeneration < AI_CONFIG.insightsUpdateInterval;
-  }
-
-  function cacheInsights(insights) {
-    insightsState.currentInsights = insights;
-    insightsState.lastGenerated = Date.now();
-    Storage.set('ai_insights', insightsState);
-  }
-
-  function loadCachedInsights() {
-    const cached = Storage.get('ai_insights');
-    if (cached) {
-      insightsState = cached;
-    }
-  }
-
-  function showNeedMoreData() {
-    const container = document.getElementById('insights-container');
-    if (container) {
-      container.innerHTML = `
-        <div class="card" style="text-align: center; padding: 40px;">
-          <div style="font-size: 3rem; margin-bottom: 16px;">📊</div>
-          <h3 style="margin-bottom: 8px;">Keep Tracking!</h3>
-          <p class="text-muted">Log at least ${AI_CONFIG.minEntriesRequired} mood entries to receive personalized AI insights.</p>
-        </div>
-      `;
-    }
-  }
-
-  function displayCurrentInsights() {
-    displayInsights(insightsState.currentInsights);
-  }
-
-  function displayInsights(insights) {
+  _renderInsights(entry) {
     const container = document.getElementById('insights-container');
     if (!container) return;
+    const insights = AI.generateInsights(entry);
 
-    const html = insights.map(insight => `
-      <div class="card insight-card" style="margin-bottom: 16px; background: ${getInsightBackground(insight.type)};">
-        <div class="card-header">
-          <span class="card-title">${insight.title}</span>
-          <span>${getTypeIcon(insight.type)}</span>
+    container.innerHTML = insights.map(ins => `
+      <div class="insight-card insight-${ins.type}">
+        <div class="insight-header">
+          <span class="insight-icon">${ins.icon}</span>
+          <span class="insight-title">${ins.title}</span>
         </div>
-        <p style="font-size: 1rem; line-height: 1.6;">${insight.text}</p>
+        <p class="insight-body">${ins.body}</p>
+        <div class="insight-action">
+          <span class="action-icon">→</span> ${ins.action}
+        </div>
       </div>
     `).join('');
+  },
 
-    container.innerHTML = html;
-  }
+  _renderTrendChart(recent) {
+    const canvas = document.getElementById('trend-chart');
+    if (!canvas || recent.length < 1) return;
 
-  function getInsightBackground(type) {
-    const backgrounds = {
-      positive: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
-      warning: 'linear-gradient(135deg, #FF9800 0%, #F57C00 100%)',
-      alert: 'linear-gradient(135deg, #F44336 0%, #C62828 100%)',
-      neutral: 'linear-gradient(135deg, #4A90A4 0%, #3A7A8E 100%)'
+    // Destroy old chart if exists
+    if (this.charts.trend) {
+      this.charts.trend.destroy();
+    }
+
+    const labels = recent.map(c => c.date || '');
+    const scores = recent.map(c => c.score);
+    const physical = recent.map(c => c.categories?.physical || 0);
+    const mental = recent.map(c => c.categories?.mental || 0);
+    const emotional = recent.map(c => c.categories?.emotional || 0);
+
+    const ctx = canvas.getContext('2d');
+
+    this.charts.trend = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Overall',
+            data: scores,
+            borderColor: '#a78bfa',
+            backgroundColor: 'rgba(167,139,250,0.12)',
+            borderWidth: 2.5,
+            pointRadius: 4,
+            pointBackgroundColor: '#a78bfa',
+            fill: true,
+            tension: 0.4,
+          },
+          {
+            label: 'Physical',
+            data: physical,
+            borderColor: '#4ade80',
+            borderWidth: 1.5,
+            pointRadius: 3,
+            borderDash: [4, 4],
+            fill: false,
+            tension: 0.4,
+          },
+          {
+            label: 'Mental',
+            data: mental,
+            borderColor: '#60a5fa',
+            borderWidth: 1.5,
+            pointRadius: 3,
+            borderDash: [4, 4],
+            fill: false,
+            tension: 0.4,
+          },
+          {
+            label: 'Emotional',
+            data: emotional,
+            borderColor: '#f472b6',
+            borderWidth: 1.5,
+            pointRadius: 3,
+            borderDash: [4, 4],
+            fill: false,
+            tension: 0.4,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: { color: '#94a3b8', font: { family: 'DM Sans', size: 11 } },
+          },
+          tooltip: {
+            backgroundColor: '#1e293b',
+            titleColor: '#e2e8f0',
+            bodyColor: '#94a3b8',
+            borderColor: '#334155',
+            borderWidth: 1,
+          },
+        },
+        scales: {
+          y: {
+            min: 0,
+            max: 100,
+            grid: { color: 'rgba(148,163,184,0.08)' },
+            ticks: { color: '#64748b', font: { size: 10 } },
+          },
+          x: {
+            grid: { color: 'rgba(148,163,184,0.05)' },
+            ticks: { color: '#64748b', font: { size: 10 } },
+          },
+        },
+      },
+    });
+  },
+
+  _renderMoodHeatmap(recent) {
+    const container = document.getElementById('mood-heatmap');
+    if (!container) return;
+
+    const moodColors = {
+      great: '#4ade80',
+      good: '#86efac',
+      okay: '#fbbf24',
+      low: '#f87171',
+      awful: '#ef4444',
     };
-    return backgrounds[type] || backgrounds.neutral;
-  }
 
-  function getTypeIcon(type) {
-    const icons = {
-      positive: '😊',
-      warning: '⚠️',
-      alert: '🆘',
-      neutral: '💭'
+    const moodEmojis = {
+      great: '😄',
+      good: '🙂',
+      okay: '😐',
+      low: '😔',
+      awful: '😣',
     };
-    return icons[type] || '💭';
-  }
 
-  // Expose public API
-  window.AIInsights = {
-    init: init,
-    generate: generate
-  };
+    container.innerHTML = recent.map(entry => `
+      <div class="heatmap-cell" style="background:${moodColors[entry.mood] || '#334155'}22; border-color:${moodColors[entry.mood] || '#334155'}">
+        <span class="heatmap-emoji">${moodEmojis[entry.mood] || '❓'}</span>
+        <span class="heatmap-date">${entry.date}</span>
+        <span class="heatmap-score">${entry.score}</span>
+      </div>
+    `).join('');
+  },
 
-})();
+  _renderStats(recent) {
+    if (!recent.length) return;
+    const scores = recent.map(c => c.score);
+    const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+    const best = Math.max(...scores);
+    const streak = recent.length;
+
+    const avgEl = document.getElementById('stat-avg');
+    const bestEl = document.getElementById('stat-best');
+    const streakEl = document.getElementById('stat-streak');
+
+    if (avgEl) avgEl.textContent = avg;
+    if (bestEl) bestEl.textContent = best;
+    if (streakEl) streakEl.textContent = streak;
+  },
+
+  _showEmptyState() {
+    const empty = document.getElementById('dashboard-empty');
+    const content = document.getElementById('dashboard-content');
+    if (empty) empty.style.display = 'flex';
+    if (content) content.style.display = 'none';
+  },
+
+  _hideEmptyState() {
+    const empty = document.getElementById('dashboard-empty');
+    const content = document.getElementById('dashboard-content');
+    if (empty) empty.style.display = 'none';
+    if (content) content.style.display = 'block';
+  },
+};

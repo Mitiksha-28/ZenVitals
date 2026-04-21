@@ -1,238 +1,105 @@
-/**
- * ================================================
- * ZenVitals – Logic Module
- * ================================================
- * 
- * Purpose:
- * Handles scoring calculations, wellness 
- * metrics, and data processing.
- * 
- * @package ZenVitals
- */
+// logic.js — ZenVitals scoring engine
 
-(function() {
-  'use strict';
+const Logic = {
+  // Core formula: score = (energy*0.3) + ((10-stress)*0.3) + (sleep_norm*0.2) + (activity*0.2)
+  // All inputs normalized to 0–10 scale before weighting
+  // Final score is 0–100
 
-  /**
-   * Score configuration
-   */
-  const SCORE_CONFIG = {
-    moodWeights: {
-      happy: 100,
-      good: 75,
-      neutral: 50,
-      bad: 25,
-      terrible: 0
-    },
-    categoryWeights: {
-      mood: 0.4,
-      sleep: 0.3,
-      exercise: 0.2,
-      social: 0.1
-    }
-  };
+  MOOD_SCORES: {
+    great: 10,
+    good: 7.5,
+    okay: 5,
+    low: 2.5,
+    awful: 0,
+  },
 
-  /**
-   * Calculate overall wellness score
-   * @public
-   * @param {Object} data - User data
-   * @returns {number} Wellness score (0-100)
-   */
-  function calculateWellnessScore(data) {
-    if (!data || !data.moodEntries || data.moodEntries.length === 0) {
-      return 50; // Default neutral score
-    }
+  SLEEP_IDEAL: 8, // hours
 
-    const recentEntries = getRecentEntries(data.moodEntries, 7);
-    const weights = SCORE_CONFIG.categoryWeights;
+  calculateScore({ energy, stress, sleepHours, activity, mood }) {
+    const e = this.clamp(energy, 0, 10);
+    const s = this.clamp(stress, 0, 10);
+    const sl = this.normalizeSleep(sleepHours);
+    const a = this.clamp(activity, 0, 10);
 
-    // Calculate component scores
-    const moodScore = calculateMoodScore(recentEntries);
-    const sleepScore = calculateSleepScore(data.sleepData);
-    const exerciseScore = calculateExerciseScore(data.exerciseData);
-    const socialScore = calculateSocialScore(data.socialData);
+    const raw =
+      e * 0.3 +
+      (10 - s) * 0.3 +
+      sl * 0.2 +
+      a * 0.2;
 
-    // Weighted average
-    const totalScore = 
-      (moodScore * weights.mood) +
-      (sleepScore * weights.sleep) +
-      (exerciseScore * weights.exercise) +
-      (socialScore * weights.social);
+    // Mood acts as a multiplier ±10%
+    const moodBonus = mood ? (this.MOOD_SCORES[mood] - 5) * 0.02 : 0;
 
-    return Math.round(totalScore);
-  }
+    return Math.round(this.clamp((raw + moodBonus) * 10, 0, 100));
+  },
 
-  /**
-   * Calculate mood sub-score
-   * @private
-   * @param {Array} entries - Mood entries
-   * @returns {number} Mood score (0-100)
-   */
-  function calculateMoodScore(entries) {
-    if (!entries || entries.length === 0) {
-      return 50;
-    }
+  // Normalize sleep: ideal is 8hrs (score 10), below 5 or above 11 penalized
+  normalizeSleep(hours) {
+    if (hours >= 7 && hours <= 9) return 10;
+    if (hours < 5) return Math.max(0, hours - 2);
+    if (hours > 10) return Math.max(0, 14 - hours);
+    return 10 - Math.abs(hours - 8) * 1.5;
+  },
 
-    const weights = SCORE_CONFIG.moodWeights;
-    const total = entries.reduce((sum, entry) => {
-      return sum + (weights[entry.mood] || 50);
-    }, 0);
+  // Category scores (0–100 each)
+  getCategoryScores({ energy, stress, sleepHours, activity, mood }) {
+    const moodVal = mood ? this.MOOD_SCORES[mood] : 5;
 
-    return Math.round(total / entries.length);
-  }
+    const physical = Math.round(
+      this.clamp(
+        (this.clamp(energy, 0, 10) * 0.4 +
+          this.normalizeSleep(sleepHours) * 0.35 +
+          this.clamp(activity, 0, 10) * 0.25) *
+        10,
+        0,
+        100
+      )
+    );
 
-  /**
-   * Calculate sleep sub-score
-   * @private
-   * @param {Array} sleepData - Sleep entries
-   * @returns {number} Sleep score (0-100)
-   */
-  function calculateSleepScore(sleepData) {
-    if (!sleepData || sleepData.length === 0) {
-      return 50;
-    }
+    const mental = Math.round(
+      this.clamp(
+        ((10 - this.clamp(stress, 0, 10)) * 0.5 +
+          moodVal * 0.3 +
+          this.normalizeSleep(sleepHours) * 0.2) *
+        10,
+        0,
+        100
+      )
+    );
 
-    // Simple calculation based on hours
-    // Ideal: 7-9 hours = 100, <5 or >10 = 0
-    const recent = sleepData.slice(-7);
-    const total = recent.reduce((sum, entry) => {
-      const hours = entry.hours || 7;
-      if (hours >= 7 && hours <= 9) return sum + 100;
-      if (hours >= 6 && hours < 7) return sum + 80;
-      if (hours >= 5 && hours < 6) return sum + 60;
-      if (hours >= 9 && hours < 10) return sum + 80;
-      return sum + 40;
-    }, 0);
+    const emotional = Math.round(
+      this.clamp(
+        (moodVal * 0.5 +
+          (10 - this.clamp(stress, 0, 10)) * 0.3 +
+          this.clamp(energy, 0, 10) * 0.2) *
+        10,
+        0,
+        100
+      )
+    );
 
-    return Math.round(total / recent.length);
-  }
+    return { physical, mental, emotional };
+  },
 
-  /**
-   * Calculate exercise sub-score
-   * @private
-   * @param {Array} exerciseData - Exercise entries
-   * @returns {number} Exercise score (0-100)
-   */
-  function calculateExerciseScore(exerciseData) {
-    if (!exerciseData || exerciseData.length === 0) {
-      return 0;
-    }
+  getScoreLabel(score) {
+    if (score >= 80) return { label: 'Thriving', color: '#4ade80', emoji: '🌟' };
+    if (score >= 60) return { label: 'Balanced', color: '#86efac', emoji: '✨' };
+    if (score >= 40) return { label: 'Steady', color: '#fbbf24', emoji: '🌤' };
+    if (score >= 20) return { label: 'Depleted', color: '#f87171', emoji: '🌧' };
+    return { label: 'Critical', color: '#ef4444', emoji: '⚠️' };
+  },
 
-    const recent = exerciseData.slice(-7);
-    const activeDays = recent.filter(e => e.minutes >= 30).length;
-    
-    return Math.round((activeDays / 7) * 100);
-  }
+  getTrend(checkIns) {
+    if (checkIns.length < 2) return 'neutral';
+    const scores = checkIns.map(c => c.score);
+    const recent = scores.slice(-3);
+    const avg = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+    if (recent.length < 2) return 'neutral';
+    return avg(recent.slice(1)) > avg(recent.slice(0, 1)) ? 'up' : 'down';
+  },
 
-  /**
-   * Calculate social sub-score
-   * @private
-   * @param {Array} socialData - Social entries
-   * @returns {number} Social score (0-100)
-   */
-  function calculateSocialScore(socialData) {
-    if (!socialData || socialData.length === 0) {
-      return 50;
-    }
+  clamp(val, min, max) {
+    return Math.min(max, Math.max(min, Number(val) || 0));
+  },
+};
 
-    const recent = socialData.slice(-7);
-    const socialDays = recent.filter(e => e.interactions > 0).length;
-    
-    return Math.round((socialDays / 7) * 100);
-  }
-
-  /**
-   * Get recent entries for a time period
-   * @private
-   * @param {Array} entries - All entries
-   * @param {number} days - Number of days
-   * @returns {Array} Recent entries
-   */
-  function getRecentEntries(entries, days) {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - days);
-    
-    return entries.filter(entry => {
-      const entryDate = new Date(entry.date);
-      return entryDate >= cutoff;
-    });
-  }
-
-  /**
-   * Calculate mood trend
-   * @public
-   * @param {Array} entries - Mood entries
-   * @returns {string} Trend direction
-   */
-  function calculateMoodTrend(entries) {
-    if (!entries || entries.length < 7) {
-      return 'stable';
-    }
-
-    const recent = getRecentEntries(entries, 3);
-    const previous = entries.slice(-7, -3);
-    
-    if (recent.length === 0 || previous.length === 0) {
-      return 'stable';
-    }
-
-    const recentAvg = getAverageMood(recent);
-    const previousAvg = getAverageMood(previous);
-    
-    const diff = recentAvg - previousAvg;
-    
-    if (diff > 15) return 'improving';
-    if (diff < -15) return 'declining';
-    return 'stable';
-  }
-
-  /**
-   * Get average mood value
-   * @private
-   * @param {Array} entries - Mood entries
-   * @returns {number} Average score
-   */
-  function getAverageMood(entries) {
-    const weights = SCORE_CONFIG.moodWeights;
-    const total = entries.reduce((sum, entry) => {
-      return sum + (weights[entry.mood] || 50);
-    }, 0);
-    
-    return total / entries.length;
-  }
-
-  /**
-   * Get streak count
-   * @public
-   * @param {Array} entries - Entries to check
-   * @returns {number} Current streak
-   */
-  function getStreakCount(entries) {
-    if (!entries || entries.length === 0) {
-      return 0;
-    }
-
-    let streak = 0;
-    const sorted = [...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    for (const entry of sorted) {
-      if (entry.mood && entry.mood !== 'bad' && entry.mood !== 'terrible') {
-        streak++;
-      } else {
-        break;
-      }
-    }
-    
-    return streak;
-  }
-
-  // Expose public API
-  window.WellnessLogic = {
-    calculateWellnessScore: calculateWellnessScore,
-    calculateMoodScore: calculateMoodScore,
-    calculateMoodTrend: calculateMoodTrend,
-    getStreakCount: getStreakCount,
-    config: SCORE_CONFIG
-  };
-
-})();
