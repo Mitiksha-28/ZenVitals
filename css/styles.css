@@ -519,23 +519,58 @@ body {
 /* Services */
 .services-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1rem;
-  max-width: 1100px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (max-width: 1100px) {
+  .services-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .services-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .service-card {
   background: var(--bg-3);
   border: 1px solid var(--border);
+  border-top: 3px solid var(--border-2); /* overridden per-card below */
   border-radius: var(--radius);
   padding: 1.5rem;
-  transition: border-color var(--transition);
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
 }
 
 .service-card:hover {
-  border-color: var(--border-2);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(139, 92, 246, 0.18);
 }
+
+/* Per-card top-border accent colors */
+.service-card:nth-child(1) { border-top-color: #4ade80; } /* green  — Wellness Scoring   */
+.service-card:nth-child(2) { border-top-color: #60a5fa; } /* blue   — Trend Analytics    */
+.service-card:nth-child(3) { border-top-color: #a78bfa; } /* violet — AI Companion       */
+.service-card:nth-child(4) { border-top-color: #f472b6; } /* pink   — Mood Tracking      */
+.service-card:nth-child(5) { border-top-color: #fbbf24; } /* amber  — Smart Insights     */
+.service-card:nth-child(6) { border-top-color: #34d399; } /* teal   — Private & Local    */
+.service-card:nth-child(7) { border-top-color: #60a5fa; } /* blue   — Corporate Wellness */
+.service-card:nth-child(8) { border-top-color: #4ade80; } /* green  — Team Health        */
+
+/* Matching glow on hover per card */
+.service-card:nth-child(1):hover { box-shadow: 0 10px 28px rgba(74, 222, 128, 0.2); }
+.service-card:nth-child(2):hover { box-shadow: 0 10px 28px rgba(96, 165, 250, 0.2); }
+.service-card:nth-child(3):hover { box-shadow: 0 10px 28px rgba(167, 139, 250, 0.2); }
+.service-card:nth-child(4):hover { box-shadow: 0 10px 28px rgba(244, 114, 182, 0.2); }
+.service-card:nth-child(5):hover { box-shadow: 0 10px 28px rgba(251, 191, 36, 0.2); }
+.service-card:nth-child(6):hover { box-shadow: 0 10px 28px rgba(52, 211, 153, 0.2); }
+.service-card:nth-child(7):hover { box-shadow: 0 10px 28px rgba(96, 165, 250, 0.2); }
+.service-card:nth-child(8):hover { box-shadow: 0 10px 28px rgba(74, 222, 128, 0.2); }
 
 .service-icon {
   font-size: 1.6rem;
@@ -1720,7 +1755,47 @@ body {
 /* ── PROFILE PAGE ───────────────────────────────── */
 /* ================= PROFILE SECTION ================= */
 
+/* Profile page two-column layout */
+.profile-layout {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.profile-history-panel {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+}
+
+.history-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.history-row:last-child { border-bottom: none; }
+.history-date { color: var(--text-3); }
+.history-score { font-weight: 700; }
+.history-label { font-size: 0.78rem; }
+
 .profile-card {
+
   background: var(--bg-2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1969,4 +2044,411 @@ body {
 
 .blog-card .btn-small {
   font-size: 0.8rem;
+}
+
+/* ═══════════════════════════════════════════════
+   UI/UX ENHANCEMENT LAYER — ZenVitals v2
+   Purely additive. No existing rules overridden.
+   ═══════════════════════════════════════════════ */
+
+/* ── Brand tagline ──────────────────────────────── */
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  line-height: 1;
+}
+
+.brand-tagline {
+  font-size: 0.62rem;
+  font-weight: 400;
+  color: var(--text-3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* ── Testimonials ───────────────────────────────── */
+.testimonials-section {
+  background: var(--bg);
+}
+
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+@media (max-width: 900px) {
+  .testimonials-grid { grid-template-columns: 1fr; }
+}
+
+.testimonial-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.testimonial-card::before {
+  content: '\201C';
+  position: absolute;
+  top: -0.5rem;
+  right: 1.25rem;
+  font-size: 5rem;
+  font-family: var(--font-display);
+  color: var(--accent);
+  opacity: 0.1;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.testimonial-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(167, 139, 250, 0.12);
+}
+
+.testimonial-stars {
+  color: var(--yellow);
+  font-size: 0.9rem;
+  letter-spacing: 2px;
+}
+
+.testimonial-text {
+  color: var(--text-2);
+  font-size: 0.93rem;
+  line-height: 1.7;
+  flex: 1;
+  font-style: italic;
+}
+
+.testimonial-author {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.testimonial-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--blue));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.testimonial-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.testimonial-role {
+  font-size: 0.78rem;
+  color: var(--text-3);
+}
+
+/* ── Footer (full) ──────────────────────────────── */
+.footer {
+  background: var(--bg-2);
+  border-top: 1px solid var(--border);
+  padding: 4rem 2rem 0;
+}
+
+.footer-inner {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr 1fr 1fr;
+  gap: 3rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 3rem;
+}
+
+@media (max-width: 900px) {
+  .footer-inner { grid-template-columns: 1fr 1fr; gap: 2rem; }
+}
+@media (max-width: 540px) {
+  .footer-inner { grid-template-columns: 1fr; }
+}
+
+.footer-col-brand .footer-brand {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.footer-desc {
+  font-size: 0.88rem;
+  color: var(--text-3);
+  line-height: 1.7;
+  max-width: 280px;
+  margin-bottom: 1.25rem;
+}
+
+.footer-badges {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.footer-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.75rem;
+  border-radius: 100px;
+  background: var(--bg-3);
+  border: 1px solid var(--border-2);
+  color: var(--text-2);
+}
+
+.footer-col-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  margin-bottom: 1.1rem;
+}
+
+.footer-link {
+  display: block;
+  font-size: 0.88rem;
+  color: var(--text-2);
+  text-decoration: none;
+  cursor: pointer;
+  margin-bottom: 0.6rem;
+  transition: color var(--transition);
+}
+
+.footer-link:hover {
+  color: var(--accent);
+}
+
+.footer-bottom {
+  border-top: 1px solid var(--border);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.25rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-3);
+}
+
+.footer-bottom-sub {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+/* ── Global micro-interactions ──────────────────── */
+
+/* Service cards lift */
+.service-card {
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+.service-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+}
+
+/* Step cards subtle scale */
+.step-card {
+  transition: border-color var(--transition), transform var(--transition);
+}
+.step-card:hover {
+  transform: translateY(-3px);
+}
+
+/* Buttons — spring feel */
+.btn-primary,
+.nav-cta {
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity var(--transition),
+              background var(--transition),
+              box-shadow var(--transition);
+}
+.btn-primary:hover {
+  box-shadow: 0 6px 20px rgba(167, 139, 250, 0.35);
+}
+.btn-ghost {
+  transition: color var(--transition), background var(--transition), transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.btn-ghost:hover {
+  transform: translateX(2px);
+}
+
+/* Dashboard panel-title label upgrade */
+.panel-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  margin-bottom: 1.25rem;
+}
+
+/* Blog card hover already defined; ensure insight cards also animate */
+.insight-card {
+  transition: border-color var(--transition), transform var(--transition);
+}
+.insight-card:hover {
+  transform: translateY(-2px);
+}
+
+/* ═══════════════════════════════════════════════
+   GLOBAL RESPONSIVE LAYER — ZenVitals
+   Mobile-first breakpoints. Purely additive.
+   ═══════════════════════════════════════════════ */
+
+/* ── Hero actions: stack on small screens ──────── */
+@media (max-width: 540px) {
+  .hero-actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .hero-actions .btn-primary,
+  .hero-actions .btn-ghost {
+    width: 100%;
+    max-width: 320px;
+    justify-content: center;
+  }
+
+  .hero-stats {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .hstat-sep {
+    display: none;
+  }
+}
+
+/* ── Navbar: shrink on very small screens ──────── */
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0 1rem;
+    height: 56px;
+  }
+
+  .brand-name {
+    font-size: 1rem;
+  }
+
+  .brand-tagline {
+    display: none;
+  }
+}
+
+/* ── Section padding: scale down on mobile ─────── */
+@media (max-width: 768px) {
+  .section {
+    padding: 3rem 1.25rem;
+  }
+
+  .section-title {
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+  }
+
+  .hero {
+    padding: 4rem 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .section {
+    padding: 2.5rem 1rem;
+  }
+}
+
+/* ── Page header: scale on mobile ─────────────── */
+@media (max-width: 540px) {
+  .page-header h1 {
+    font-size: clamp(1.6rem, 6vw, 2.5rem);
+  }
+}
+
+/* ── Check-in layout: stack on mobile ─────────── */
+@media (max-width: 860px) {
+  .checkin-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .checkin-preview {
+    display: none; /* hide score preview on small screens to save space */
+  }
+}
+
+/* ── Profile layout: stack on mobile ──────────── */
+@media (max-width: 760px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+/* ── Analytics/booking grids ───────────────────── */
+@media (max-width: 768px) {
+  .analytics-grid,
+  .booking-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Steps grid: single column on mobile ──────── */
+@media (max-width: 540px) {
+  .steps-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Footer: collapse on small screens ─────────── */
+@media (max-width: 480px) {
+  .footer-bottom {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.25rem;
+  }
+
+  .footer-bottom-sub {
+    display: none;
+  }
+}
+
+/* ── Prevent horizontal overflow globally ─────── */
+body,
+.page {
+  overflow-x: hidden;
+}
+
+/* ── Stat cards in dashboard: wrap on mobile ──── */
+@media (max-width: 480px) {
+  .stats-bar {
+    flex-direction: column;
+  }
 }
