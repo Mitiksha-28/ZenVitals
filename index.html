@@ -4,7 +4,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ZenVitals is an AI-powered holistic wellness platform that helps you track mental, physical, and emotional health through daily check-ins and personalized insights." />
   <title>ZenVitals — AI-Powered Wellness Platform</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -605,7 +607,10 @@
   <nav class="navbar">
     <div class="nav-brand" data-nav="home">
       <span class="brand-icon">🌿</span>
-      <span class="brand-name">ZenVitals</span>
+      <div class="brand-text">
+        <span class="brand-name">ZenVitals</span>
+        <span class="brand-tagline">AI-powered holistic wellness</span>
+      </div>
     </div>
     <div class="nav-links">
       <a data-nav="home" class="nav-link">Home</a>
@@ -615,7 +620,8 @@
       <a data-nav="chat" class="nav-link">AI Chat</a>
       <a data-nav="booking" class="nav-link">Booking</a>
       <a data-nav="blog" class="nav-link">Blog</a>
-      <button class="nav-cta" data-nav="checkin">Start Today</button>
+      <a data-nav="profile" class="nav-link">Profile</a>
+      <button class="nav-cta" data-nav="checkin">Start Free Assessment</button>
     </div>
     <button class="hamburger" id="nav-toggle">
       <span></span><span></span><span></span>
@@ -631,6 +637,7 @@
     <a data-nav="chat" class="nav-link">AI Chat</a>
     <a data-nav="booking" class="nav-link">Booking</a>
     <a data-nav="blog" class="nav-link">Blog</a>
+    <a data-nav="profile" class="nav-link">Profile</a>
   </div>
 
   <!-- ── PAGES ─────────────────────────────────────── -->
@@ -645,27 +652,25 @@
         <div class="orb orb-3"></div>
       </div>
       <div class="hero-content">
-        <div class="hero-badge">AI-Powered Wellness</div>
+        <div class="hero-badge">✦ AI-Powered Wellness Platform</div>
         <h1 class="hero-title">
-          Know your vitals.<br />
-          <em>Own your wellness.</em>
+          Understand Your Wellness.<br />
+          <em>Improve Your Life.</em>
         </h1>
         <p class="hero-subtitle">
-          ZenVitals turns your daily inputs into precise wellness scores,
-          actionable AI insights, and long-term health patterns — all in one platform.
+          Track your mental, physical, and emotional energy using AI-driven insights —
+          and turn 60 seconds a day into lasting, measurable wellbeing.
         </p>
         <div class="hero-actions">
-          <button class="btn-primary" data-nav="checkin">Start Daily Check-In</button>
+          <button class="btn-primary" data-nav="checkin">Start Free Assessment</button>
           <button class="btn-ghost" data-nav="dashboard">View Dashboard →</button>
         </div>
         <div class="hero-stats">
           <div class="hstat"><span class="hstat-num">3</span><span class="hstat-label">Health Dimensions</span></div>
           <div class="hstat-sep"></div>
-          <div class="hstat"><span class="hstat-num">AI</span><span class="hstat-label">Personalized Insights</span>
-          </div>
+          <div class="hstat"><span class="hstat-num">AI</span><span class="hstat-label">Personalised Insights</span></div>
           <div class="hstat-sep"></div>
-          <div class="hstat"><span class="hstat-num">100</span><span class="hstat-label">Point Wellness Score</span>
-          </div>
+          <div class="hstat"><span class="hstat-num">60s</span><span class="hstat-label">Daily Check-In</span></div>
         </div>
       </div>
     </section>
@@ -841,15 +846,58 @@
           <h3>Private & Local</h3>
           <p>All data stored locally on your device. Zero cloud uploads. Your wellness data stays yours.</p>
         </div>
-        <div class="service-card" style="border-top:3px solid #60a5fa">
+        <div class="service-card">
           <span class="service-icon">🏢</span>
           <h3>Corporate Wellness Programs</h3>
           <p>Structured wellness initiatives for teams and organisations — group assessments, aggregate insights, and custom health benchmarks designed for the modern workplace.</p>
         </div>
-        <div class="service-card" style="border-top:3px solid #4ade80">
+        <div class="service-card">
           <span class="service-icon">🤝</span>
           <h3>Team Health Assessments</h3>
           <p>Facilitate anonymous team-level wellness check-ins and trend reports, helping managers identify burnout risk and foster a proactive wellbeing culture.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="section testimonials-section">
+      <div class="section-header">
+        <div class="section-tag">Testimonials</div>
+        <h2 class="section-title">Loved by people who take wellness seriously</h2>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"ZenVitals completely changed how I handle exam season. Seeing my stress score spike helped me actually do something about it before burnout hit."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">S</div>
+            <div>
+              <div class="testimonial-name">Sana M.</div>
+              <div class="testimonial-role">University Student</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"I've tried a dozen wellness apps. ZenVitals is the first one that actually shows me patterns — not just tells me to meditate more."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">R</div>
+            <div>
+              <div class="testimonial-name">Rahul K.</div>
+              <div class="testimonial-role">Software Engineer</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"The AI chat is genuinely helpful. It doesn't give generic advice — it reads your actual data and responds to where you are today."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">A</div>
+            <div>
+              <div class="testimonial-name">Aisha T.</div>
+              <div class="testimonial-role">Wellness Coach</div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -965,9 +1013,42 @@
 
     <!-- Footer -->
     <footer class="footer">
-      <div class="footer-brand">🌿 ZenVitals</div>
-      <p>Design Thinking Project · AI-Powered Wellness Assessment</p>
-      <p class="footer-sub">Built with pure HTML, CSS & JavaScript · All data stored locally</p>
+      <div class="footer-inner">
+        <div class="footer-col footer-col-brand">
+          <div class="footer-brand">🌿 ZenVitals</div>
+          <p class="footer-desc">An AI-powered holistic wellness platform helping you understand and improve your mental, physical, and emotional health — one day at a time.</p>
+          <div class="footer-badges">
+            <span class="footer-badge">🔒 100% Private</span>
+            <span class="footer-badge">⚡ Offline First</span>
+          </div>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col-title">Platform</div>
+          <a class="footer-link" data-nav="checkin">Daily Check-In</a>
+          <a class="footer-link" data-nav="dashboard">Dashboard</a>
+          <a class="footer-link" data-nav="analytics">Analytics</a>
+          <a class="footer-link" data-nav="chat">AI Companion</a>
+          <a class="footer-link" data-nav="booking">Book a Session</a>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col-title">Company</div>
+          <a class="footer-link" data-nav="home">About Us</a>
+          <a class="footer-link" data-nav="blog">Knowledge Hub</a>
+          <a class="footer-link" href="#">Careers</a>
+          <a class="footer-link" href="#">Press Kit</a>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col-title">Legal</div>
+          <a class="footer-link" href="#">Privacy Policy</a>
+          <a class="footer-link" href="#">Terms of Service</a>
+          <a class="footer-link" href="#">Cookie Policy</a>
+          <a class="footer-link" href="#">Contact Us</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 ZenVitals. All rights reserved.</span>
+        <span class="footer-bottom-sub">Built with HTML, CSS &amp; JavaScript · All data stored locally on your device.</span>
+      </div>
     </footer>
   </div>
 
@@ -1096,8 +1177,8 @@
   <!-- DASHBOARD PAGE -->
   <div id="page-dashboard" class="page">
     <div class="page-header">
-      <h1>Your Dashboard</h1>
-      <p>Your wellness at a glance</p>
+      <h1>Your Wellness Dashboard</h1>
+      <p>A real-time view of your mental, physical, and emotional health</p>
     </div>
 
     <!-- Empty state -->
@@ -1349,6 +1430,67 @@
     </div>
   </div>
 
+  <!-- PROFILE PAGE -->
+  <div id="page-profile" class="page">
+    <div class="page-header">
+      <h1>Your Profile</h1>
+      <p>Manage your personal information and view your wellness history</p>
+    </div>
+
+    <div class="profile-layout">
+      <!-- Left: Card -->
+      <div class="profile-card">
+        <div class="profile-avatar">🧘</div>
+        <div class="profile-name" id="profile-display-name">Wellness User</div>
+        <div class="profile-sub">ZenVitals Member</div>
+
+        <!-- Stats -->
+        <div class="profile-stats">
+          <div class="profile-stat">
+            <strong id="profile-total-checkins">0</strong>
+            <span>Check-Ins</span>
+          </div>
+          <div class="profile-stat">
+            <strong id="profile-latest-score">--</strong>
+            <span>Latest Score</span>
+          </div>
+          <div class="profile-stat">
+            <strong id="profile-avg-score">--</strong>
+            <span>Avg Score</span>
+          </div>
+        </div>
+
+        <!-- Form -->
+        <div class="profile-form-group">
+          <label for="profile-name">Display Name</label>
+          <input type="text" id="profile-name" class="profile-input" placeholder="Enter your name" />
+        </div>
+        <div class="profile-form-group">
+          <label for="profile-email">Email Address</label>
+          <input type="email" id="profile-email" class="profile-input" placeholder="Enter your email" />
+        </div>
+        <div class="profile-form-group">
+          <label for="profile-bio">About You <span style="font-weight:400;text-transform:none">(optional)</span></label>
+          <textarea id="profile-bio" class="profile-textarea" placeholder="A little about yourself..."></textarea>
+        </div>
+
+        <div id="profile-msg" style="display:none"></div>
+        <button id="profile-save-btn" class="btn-primary">Save Profile</button>
+      </div>
+
+      <!-- Right: History -->
+      <div class="profile-history-panel">
+        <h3 class="panel-title">Assessment History</h3>
+        <div id="profile-history">
+          <p class="empty-text">Start your first check-in to unlock insights.</p>
+        </div>
+        <div style="margin-top:1.5rem;text-align:center">
+          <button class="btn-primary" data-nav="checkin">+ New Check-In</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="js/storage.js"></script>
   <script src="js/logic.js"></script>
@@ -1359,6 +1501,7 @@
   <script src="js/main.js"></script>
   <script src="js/booking.js"></script>
   <script src="js/blog.js"></script>
+  <script src="js/profile.js"></script>
 </body>
 
 </html>

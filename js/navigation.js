@@ -65,6 +65,7 @@ const Navigation = {
     }
     if (page === 'booking' && Booking) Booking.init();
     if (page === 'blog' && Blog) Blog.init();
+    if (page === 'profile' && Profile) Profile.init();
   },
 
   _initAnalytics() {
